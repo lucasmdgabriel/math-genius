@@ -2,12 +2,14 @@
 
 interface ResultsViewProps {
   score: number;
+  highScore: number;
   onPlayAgain: () => void;
   onGoHome: () => void;
 }
 
 export default function ResultsView({ 
   score, 
+  highScore,
   onPlayAgain, 
   onGoHome 
 }: ResultsViewProps) {
@@ -19,8 +21,7 @@ export default function ResultsView({
           Resultados do Desafio!
         </h1>
 
-        {/* Card da Pontuação */}
-        <div className="bg-purple-100 rounded-2xl p-8 w-full flex flex-col items-center mb-6 shadow-inner">
+        <div className="bg-purple-100 rounded-2xl p-8 w-full flex flex-col items-center mb-4 shadow-inner">
           <span className="text-7xl font-bold text-purple-600">
             {score}
           </span>
@@ -29,12 +30,14 @@ export default function ResultsView({
           </span>
         </div>
 
-        {/* Mensagem */}
+        <p className="text-lg text-gray-600 mb-6">
+          Seu recorde é: <span className="font-bold text-purple-600">{highScore}</span>
+        </p>
+
         <p className="text-center text-gray-600 mb-8 px-4">
           Parabéns pelo seu esforço! Você está indo muito bem!
         </p>
 
-        {/* Botões de Ação */}
         <div className="w-full flex flex-col gap-3">
           <button
             onClick={onPlayAgain}
