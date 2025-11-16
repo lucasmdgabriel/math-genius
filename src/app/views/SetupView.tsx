@@ -1,13 +1,15 @@
 'use client';
 
 import React from 'react';
-import { Plus, Minus, X, Divide, Shuffle, Brain } from 'lucide-react';
+import { Plus, Minus, X, Divide, Shuffle, Brain, Calculator } from 'lucide-react';
 
 interface SetupScreenProps {
   selectedOp: string | null;
   setSelectedOp: React.Dispatch<React.SetStateAction<string | null>>;
   selectedNum: number | string | null;
   setSelectedNum: React.Dispatch<React.SetStateAction<number | string | null>>;
+  gameMode: 'normal' | 'equations';
+  setGameMode: React.Dispatch<React.SetStateAction<'normal' | 'equations'>>;
   onConfirm: () => void;
 }
 
@@ -16,6 +18,8 @@ export default function SetupScreen({
   setSelectedOp,
   selectedNum,
   setSelectedNum,
+  gameMode,
+  setGameMode,
   onConfirm
 }: SetupScreenProps) {
 
@@ -29,109 +33,189 @@ export default function SetupScreen({
   const numbers = [7, 8, 9, 4, 5, 6, 1, 2, 3];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans">
+    <div className="min-h-screen bg-linear-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4 font-sans">
       
-      <div className="w-full max-w-5xl bg-white rounded-3xl shadow-xl overflow-hidden p-6 md:p-10 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+      <div className="w-full max-w-6xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
         
         {/* Header */}
-        <div className="flex flex-col items-center md:col-span-2 mb-2">
-          <div className="bg-purple-100 p-4 rounded-2xl mb-4 text-purple-600">
-            <Brain size={40} />
+        <div className="text-center pt-6 pb-4 px-8">
+          <div className="inline-flex bg-purple-100 p-3 rounded-2xl mb-3">
+            <Brain size={32} className="text-purple-600" />
           </div>
-          <h1 className="text-3xl font-bold text-purple-600 mb-1 text-center">Gênio da Matemática</h1>
-          <p className="text-gray-500 text-base font-medium text-center">Pronto para treinar seu cérebro?</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1 tracking-tight">Gênio da Matemática</h1>
+          <p className="text-gray-600 text-sm font-medium">Treine seu raciocínio e supere seus limites</p>
         </div>
 
-        <div className="flex flex-col justify-center">
-          <h2 className="text-center md:text-left text-gray-900 font-bold mb-6 text-lg">
-            1. Escolha o desafio:
+        {/* Seletor de Modo */}
+        <div className="px-8 pb-8">
+          <h2 className="text-center text-gray-900 font-bold mb-5 text-lg">
+            Escolha o Modo de Jogo
           </h2>
-          <div className="grid grid-cols-2 gap-4">
-            {operations.map((op) => {
-              const isSelected = selectedOp === op.id;
-              return (
-                <button
-                  key={op.id}
-                  onClick={() => setSelectedOp(op.id)}
-                  className={`
-                    ${op.color} text-white p-6 rounded-2xl 
-                    flex flex-col items-center justify-center gap-2 
-                    transition-all duration-200 shadow-md aspect-square
-                    hover:opacity-90 active:scale-95
-                    ${isSelected ? `ring-4 ${op.ring} scale-105 shadow-lg z-10` : 'opacity-100'}
-                  `}
-                >
-                  <div className="font-bold">{op.symbol}</div>
-                  <span className="text-sm font-medium">{op.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="flex flex-col justify-center">
-          <h2 className="text-center md:text-left text-gray-900 font-bold mb-6 text-lg">
-            2. Escolha a tabuada:
-          </h2>
-          <div className="grid grid-cols-3 gap-3">
-            {numbers.map((num) => {
-              const isSelected = selectedNum === num;
-              return (
-                <button
-                  key={num}
-                  onClick={() => setSelectedNum(num)}
-                  className={`
-                    font-bold text-xl py-5 rounded-xl transition-all duration-200
-                    ${isSelected 
-                      ? 'bg-purple-600 text-white shadow-md scale-105' 
-                      : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}
-                  `}
-                >
-                  {num}
-                </button>
-              );
-            })}
-            
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl mx-auto mb-8">
             <button
-              onClick={() => setSelectedNum(0)}
+              onClick={() => {
+                setGameMode('normal');
+                setSelectedOp(null);
+                setSelectedNum(null);
+              }}
               className={`
-                font-bold text-xl py-5 rounded-xl transition-all duration-200
-                ${selectedNum === 0 
-                  ? 'bg-purple-600 text-white shadow-md scale-105' 
-                  : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}
+                p-6 rounded-2xl flex flex-col items-center gap-3 transition-all duration-200 shadow-md
+                ${gameMode === 'normal' 
+                  ? 'bg-purple-600 text-white ring-4 ring-purple-300 scale-105' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
               `}
             >
-              0
+              <Brain size={32} />
+              <div className="text-center">
+                <div className="font-bold text-lg">Treino Rápido</div>
+                <div className="text-sm opacity-90">15 segundos de desafio</div>
+              </div>
             </button>
 
             <button
-              onClick={() => setSelectedNum('mix')}
+              onClick={() => {
+                setGameMode('equations');
+                setSelectedOp('equation');
+                setSelectedNum('equation');
+              }}
               className={`
-                col-span-2 flex flex-col items-center justify-center rounded-xl transition-all duration-200 py-2
-                ${selectedNum === 'mix' 
-                  ? 'bg-purple-600 text-white shadow-md scale-105' 
-                  : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}
+                p-6 rounded-2xl flex flex-col items-center gap-3 transition-all duration-200 shadow-md
+                ${gameMode === 'equations' 
+                  ? 'bg-purple-600 text-white ring-4 ring-purple-300 scale-105' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}
               `}
             >
-              <Shuffle size={20} className="mb-1" />
-              <span className="text-sm font-medium">Mix</span>
+              <Calculator size={32} />
+              <div className="text-center">
+                <div className="font-bold text-lg">Equações 1º Grau</div>
+                <div className="text-sm opacity-90">5 questões • 1 min cada</div>
+              </div>
             </button>
           </div>
-        </div>
 
-        <div className="md:col-span-2 pt-4">
-          <button 
-            onClick={onConfirm}
-            disabled={!selectedOp || selectedNum === null}
-            className={`
-              w-full font-bold py-5 rounded-xl shadow-lg transition-all duration-300 text-xl tracking-wide
-              ${(!selectedOp || selectedNum === null) 
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                : 'bg-purple-600 text-white hover:bg-purple-700 hover:shadow-xl transform hover:-translate-y-1'}
-            `}
-          >
-            Começar Desafio!
-          </button>
+          {/* Conteúdo baseado no modo */}
+          {gameMode === 'normal' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Operações */}
+              <div>
+                <h2 className="text-center md:text-left text-gray-900 font-bold mb-6 text-lg">
+                  1. Escolha a Operação
+                </h2>
+                <div className="grid grid-cols-2 gap-4">
+                  {operations.map((op) => {
+                    const isSelected = selectedOp === op.id;
+                    return (
+                      <button
+                        key={op.id}
+                        onClick={() => setSelectedOp(op.id)}
+                        className={`
+                          ${op.color} text-white p-6 rounded-2xl 
+                          flex flex-col items-center justify-center gap-2 
+                          transition-all duration-200 shadow-md aspect-square
+                          hover:opacity-90 active:scale-95
+                          ${isSelected ? `ring-4 ${op.ring} scale-105 shadow-lg` : 'opacity-100'}
+                        `}
+                      >
+                        <div className="font-bold">{op.symbol}</div>
+                        <span className="text-sm font-semibold">{op.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Tabuadas */}
+              <div>
+                <h2 className="text-center md:text-left text-gray-900 font-bold mb-6 text-lg">
+                  2. Escolha a Tabuada
+                </h2>
+                <div className="grid grid-cols-3 gap-3">
+                  {numbers.map((num) => {
+                    const isSelected = selectedNum === num;
+                    return (
+                      <button
+                        key={num}
+                        onClick={() => setSelectedNum(num)}
+                        className={`
+                          font-bold text-xl py-5 rounded-xl transition-all duration-200
+                          ${isSelected 
+                            ? 'bg-purple-600 text-white shadow-md scale-105' 
+                            : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}
+                        `}
+                      >
+                        {num}
+                      </button>
+                    );
+                  })}
+                  
+                  <button
+                    onClick={() => setSelectedNum(0)}
+                    className={`
+                      font-bold text-xl py-5 rounded-xl transition-all duration-200
+                      ${selectedNum === 0 
+                        ? 'bg-purple-600 text-white shadow-md scale-105' 
+                        : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}
+                    `}
+                  >
+                    0
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedNum('mix')}
+                    className={`
+                      col-span-2 flex flex-col items-center justify-center rounded-xl transition-all duration-200 py-2
+                      ${selectedNum === 'mix' 
+                        ? 'bg-purple-600 text-white shadow-md scale-105' 
+                        : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}
+                    `}
+                  >
+                    <Shuffle size={20} className="mb-1" />
+                    <span className="text-sm font-medium">Mix</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="max-w-2xl mx-auto text-center">
+              <div className="bg-purple-50 rounded-2xl p-8 mb-6">
+                <h3 className="text-xl font-bold text-purple-900 mb-4">Como funciona?</h3>
+                <ul className="text-left space-y-3 text-gray-700">
+                  <li className="flex items-start gap-3">
+                    <span className="bg-purple-600 text-white rounded-full w-6 h-6 flex items-center justify-center shrink-0 text-sm font-bold">1</span>
+                    <span>Resolva <strong>5 equações de 1º grau</strong></span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="bg-purple-600 text-white rounded-full w-6 h-6 flex items-center justify-center shrink-0 text-sm font-bold">2</span>
+                    <span>Você tem <strong>1 minuto</strong> para cada equação</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="bg-purple-600 text-white rounded-full w-6 h-6 flex items-center justify-center shrink-0 text-sm font-bold">3</span>
+                    <span>Encontre o valor de <strong>X</strong></span>
+                  </li>
+                </ul>
+              </div>
+              <p className="text-gray-600 text-sm">
+                Exemplo: <span className="font-mono font-bold">2x + 5 = 13</span> → Resposta: <span className="font-bold">x = 4</span>
+              </p>
+            </div>
+          )}
+
+          {/* Botão de Confirmar */}
+          <div className="mt-8">
+            <button 
+              onClick={onConfirm}
+              disabled={gameMode === 'normal' && (!selectedOp || selectedNum === null)}
+              className={`
+                w-full font-bold py-5 rounded-xl shadow-lg transition-all duration-300 text-xl tracking-wide
+                ${(gameMode === 'normal' && (!selectedOp || selectedNum === null))
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                  : 'bg-purple-600 text-white hover:bg-purple-700 hover:shadow-xl transform hover:-translate-y-1'}
+              `}
+            >
+              {gameMode === 'equations' ? 'Iniciar Desafio de Equações' : 'Começar Desafio'}
+            </button>
+          </div>
+
         </div>
 
       </div>

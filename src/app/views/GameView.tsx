@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Delete } from 'lucide-react';
+import StreakIndicator from '../components/StreakIndicator';
 
 interface GameViewProps {
   totalTimeInSeconds: number;
-  operation: 'add' | 'sub' | 'mult' | 'div';
-  tableNumber: number | 'mix';
+  operation: 'add' | 'sub' | 'mult' | 'div' | 'equation';
+  tableNumber: number | 'mix' | 'equation';
+  gameMode?: 'normal' | 'equations';
   onTimeUp: (finalScore: number) => void; 
 }
 
@@ -29,6 +31,7 @@ export default function GameView({
   totalTimeInSeconds,
   operation,
   tableNumber,
+  gameMode = 'normal',
   onTimeUp
 }: GameViewProps) {
 
@@ -37,8 +40,132 @@ export default function GameView({
   const [currentAnswer, setCurrentAnswer] = useState("");
   const [currentQuestion, setCurrentQuestion] = useState<Question>({ text: "", answer: 0 });
   const [score, setScore] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [questionsAnswered, setQuestionsAnswered] = useState(0);
+  const [isEquationMode] = useState(gameMode === 'equations');
+  const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
+  const [correctAnswer, setCorrectAnswer] = useState<number | null>(null);
+  
+  // Referências para os áudios
+  const correctSoundRef = React.useRef<any>(null);
+  const wrongSoundRef = React.useRef<any>(null);
+  const chainSoundRef = React.useRef<any>(null);
+  const audioContextRef = React.useRef<AudioContext | null>(null);
+
+  // Inicializa os sons
+  useEffect(() => {
+    // Cria um contexto de áudio usando Web Audio API para sons sintéticos
+    const audioContext = typeof window !== 'undefined' ? new (window.AudioContext || (window as any).webkitAudioContext)() : null;
+    audioContextRef.current = audioContext;
+    
+    const playCorrectSound = () => {
+      if (!audioContext) return;
+      
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Som de acerto (sequência de notas ascendentes)
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+      oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+      oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // G5
+      
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3);
+    };
+    
+    const playWrongSound = () => {
+      if (!audioContext) return;
+      
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Som de erro (notas descendentes graves)
+      oscillator.type = 'sawtooth';
+      oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.15);
+      oscillator.frequency.exponentialRampToValueAtTime(100, audioContext.currentTime + 0.3);
+      
+      gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.4);
+    };
+    
+    const playChainSound = () => {
+      if (!audioContext) return;
+      
+      const playChainSound = () => {
+      if (!audioContext) return;
+      
+      // Som discreto e suave de sucesso - não distrai
+      const now = audioContext.currentTime;
+      
+      // Tom suave ascendente - discreto mas positivo
+      const note1 = audioContext.createOscillator();
+      const gain1 = audioContext.createGain();
+      note1.type = 'sine';
+      note1.frequency.setValueAtTime(880, now); // A5
+      gain1.gain.setValueAtTime(0.08, now);
+      gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+      note1.connect(gain1);
+      gain1.connect(audioContext.destination);
+      note1.start(now);
+      note1.stop(now + 0.15);
+      
+      // Segunda nota suave
+      const note2 = audioContext.createOscillator();
+      const gain2 = audioContext.createGain();
+      note2.type = 'sine';
+      note2.frequency.setValueAtTime(1046.5, now + 0.08); // C6
+      gain2.gain.setValueAtTime(0.06, now + 0.08);
+      gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+      note2.connect(gain2);
+      gain2.connect(audioContext.destination);
+      note2.start(now + 0.08);
+      note2.stop(now + 0.2);
+    };
+    };
+    
+    correctSoundRef.current = { play: playCorrectSound };
+    wrongSoundRef.current = { play: playWrongSound };
+    chainSoundRef.current = { play: playChainSound };
+    
+    return () => {
+      if (audioContext && audioContext.state !== 'closed') {
+        audioContext.close();
+      }
+    };
+  }, []);
 
   const generateQuestion = useCallback((): Question => {
+    // Modo de equações
+    if (isEquationMode) {
+      // Gera equações do tipo: ax + b = c, onde x é a resposta
+      const a = randomInt(2, 10); // coeficiente de x
+      const x = randomInt(1, 20); // valor de x (resposta)
+      const b = randomInt(-20, 20); // termo independente do lado esquerdo
+      const c = a * x + b; // resultado do lado direito
+      
+      // Formata a equação
+      const bSign = b >= 0 ? '+' : '-';
+      const bAbs = Math.abs(b);
+      const questionText = `${a}x ${bSign} ${bAbs} = ${c}`;
+      
+      return { text: questionText, answer: x };
+    }
+
+    // Modo normal (operações básicas)
     let op = operation;
     let table: number | string;
 
@@ -94,11 +221,32 @@ export default function GameView({
         break;
     }
     return { text: questionText, answer };
-  }, [operation, tableNumber]);
+  }, [operation, tableNumber, isEquationMode]);
 
   useEffect(() => {
+    // Para modo de equações, termina após 5 questões
+    if (isEquationMode && questionsAnswered >= 5) {
+      onTimeUp(score);
+      return;
+    }
+    
     if (timeLeft <= 0) {
-      onTimeUp(score); 
+      if (isEquationMode) {
+        // No modo de equações, pula para próxima questão quando o tempo acaba
+        setQuestionsAnswered(prev => prev + 1);
+        if (questionsAnswered + 1 >= 5) {
+          onTimeUp(score);
+          return;
+        }
+        // Reseta o timer para a próxima questão
+        setTimeLeft(60);
+        setStreak(0);
+        let newQuestion = generateQuestion();
+        setCurrentQuestion(newQuestion);
+        setCurrentAnswer("");
+      } else {
+        onTimeUp(score);
+      }
       return;
     }
     const timerInterval = setInterval(() => {
@@ -108,9 +256,11 @@ export default function GameView({
   }, [timeLeft, onTimeUp, score]);
 
   useEffect(() => {
-    const newProgress = (timeLeft / totalTimeInSeconds) * 100;
+    const newProgress = isEquationMode 
+      ? ((5 - questionsAnswered) / 5) * 100  // Progresso baseado em questões restantes
+      : (timeLeft / totalTimeInSeconds) * 100; // Progresso baseado no tempo
     setProgress(newProgress);
-  }, [timeLeft, totalTimeInSeconds]);
+  }, [timeLeft, totalTimeInSeconds, isEquationMode, questionsAnswered]);
 
   useEffect(() => {
     setCurrentQuestion(generateQuestion());
@@ -126,23 +276,82 @@ export default function GameView({
     setCurrentAnswer((prev) => prev.slice(0, -1));
   }, []);
 
-  const handleConfirm = useCallback(() => {
+    const handleConfirm = useCallback(() => {
     if (currentAnswer.length === 0) return;
 
     const userAnswer = parseInt(currentAnswer, 10);
     
     if (userAnswer === currentQuestion.answer) {
       setScore((prevScore) => prevScore + 1);
+      setStreak((prevStreak) => {
+        const newStreak = prevStreak + 1;
+        
+        // Toca som de acerto normal
+        if (correctSoundRef.current) {
+          correctSoundRef.current.play();
+        }
+        
+        // Toca som de CHAIN se atingir 5 ou mais acertos consecutivos
+        if (newStreak >= 5 && chainSoundRef.current) {
+          setTimeout(() => {
+            chainSoundRef.current.play();
+          }, 150);
+        }
+        
+        return newStreak;
+      });
+      
+      // No modo de equações, incrementa contador e reseta timer
+      if (isEquationMode) {
+        setQuestionsAnswered(prev => prev + 1);
+        if (questionsAnswered + 1 >= 5) {
+          return; // O useEffect vai lidar com o fim do jogo
+        }
+        setTimeLeft(60); // Reseta para 1 minuto
+      }
+      
+      let newQuestion = generateQuestion();
+      while (newQuestion.text === currentQuestion.text) {
+        newQuestion = generateQuestion();
+      }
+      
+      setCurrentQuestion(newQuestion);
+      setCurrentAnswer("");
+    } else {
+      // Toca som de erro
+      if (wrongSoundRef.current) {
+        wrongSoundRef.current.play();
+      }
+      setStreak(0);
+      
+      // Mostra a resposta correta
+      setCorrectAnswer(currentQuestion.answer);
+      setShowCorrectAnswer(true);
+      
+      // Aguarda 2 segundos antes de gerar nova questão
+      setTimeout(() => {
+        setShowCorrectAnswer(false);
+        setCorrectAnswer(null);
+        
+        // No modo de equações, incrementa contador e reseta timer
+        if (isEquationMode) {
+          setQuestionsAnswered(prev => prev + 1);
+          if (questionsAnswered + 1 >= 5) {
+            return; // O useEffect vai lidar com o fim do jogo
+          }
+          setTimeLeft(60); // Reseta para 1 minuto
+        }
+        
+        let newQuestion = generateQuestion();
+        while (newQuestion.text === currentQuestion.text) {
+          newQuestion = generateQuestion();
+        }
+        
+        setCurrentQuestion(newQuestion);
+        setCurrentAnswer("");
+      }, 2000);
     }
-    
-    let newQuestion = generateQuestion();
-    while (newQuestion.text === currentQuestion.text) {
-      newQuestion = generateQuestion();
-    }
-    
-    setCurrentQuestion(newQuestion);
-    setCurrentAnswer("");
-  }, [currentAnswer, currentQuestion.text, currentQuestion.answer, generateQuestion]);
+  }, [currentAnswer, currentQuestion.text, currentQuestion.answer, generateQuestion, isEquationMode, questionsAnswered]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -176,7 +385,24 @@ export default function GameView({
         <div className="flex flex-col h-full">
           <div className="flex items-center gap-4 mb-8">
             
-            {/* ADICIONADO AQUI */}
+            {/* Indicador de Streak - não mostra no modo equações */}
+            {!isEquationMode && (
+              <div className="relative">
+                <StreakIndicator streak={streak} maxStreak={10} />
+              </div>
+            )}
+
+            {/* Contador de questões para modo equações */}
+            {isEquationMode && (
+              <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-2 shadow-md border-2 border-purple-200">
+                <span className="text-sm text-gray-600 font-semibold">QUESTÃO</span>
+                <span className="text-2xl font-black text-purple-600">
+                  {questionsAnswered + 1}/5
+                </span>
+              </div>
+            )}
+
+            {/* Contador de acertos */}
             <span className="text-lg font-bold text-purple-600 whitespace-nowrap">
               Acertos: {score}
             </span>
@@ -193,15 +419,39 @@ export default function GameView({
           </div>
 
           <div className="bg-gray-100 rounded-2xl p-8 mb-4 flex items-center justify-center shadow-inner flex-1 min-h-[150px]">
-            <span className="text-4xl md:text-5xl font-black text-gray-800 tracking-wide">
-              {currentQuestion.text}
-            </span>
+            {isEquationMode ? (
+              <span className="text-3xl md:text-4xl font-black text-gray-800 tracking-wide text-center">
+                {currentQuestion.text.split('x').map((part, index, arr) => (
+                  <React.Fragment key={index}>
+                    {part}
+                    {index < arr.length - 1 && <span className="text-purple-600">x</span>}
+                  </React.Fragment>
+                ))}
+              </span>
+            ) : (
+              <span className="text-4xl md:text-5xl font-black text-gray-800 tracking-wide">
+                {currentQuestion.text}
+              </span>
+            )}
           </div>
 
-          <div className="border-2 border-gray-200 rounded-2xl p-4 mb-4 md:mb-0 flex items-center justify-center min-h-[100px] bg-gray-50 flex-1">
-            <span className={`text-3xl md:text-4xl font-bold ${currentAnswer ? 'text-gray-800' : 'text-gray-400'}`}>
-              {currentAnswer || "?"}
-            </span>
+          <div className={`border-2 rounded-2xl p-4 mb-4 md:mb-0 flex flex-col items-center justify-center min-h-[100px] flex-1 transition-all duration-300 ${
+            showCorrectAnswer 
+              ? 'bg-red-50 border-red-300' 
+              : 'bg-gray-50 border-gray-200'
+          }`}>
+            {showCorrectAnswer ? (
+              <>
+                <span className="text-sm text-red-600 font-semibold mb-2">Resposta correta:</span>
+                <span className="text-3xl md:text-4xl font-bold text-red-600">
+                  {isEquationMode ? `x = ${correctAnswer}` : correctAnswer}
+                </span>
+              </>
+            ) : (
+              <span className={`text-3xl md:text-4xl font-bold ${currentAnswer ? 'text-gray-800' : 'text-gray-400'}`}>
+                {currentAnswer || "?"}
+              </span>
+            )}
           </div>
         </div>
 
@@ -211,7 +461,12 @@ export default function GameView({
               <button
                 key={num}
                 onClick={() => handleNumberClick(num)}
-                className="bg-white border border-gray-100 shadow-sm rounded-2xl py-4 md:py-6 text-2xl font-bold text-gray-700 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all"
+                disabled={showCorrectAnswer}
+                className={`bg-white border border-gray-100 shadow-sm rounded-2xl py-4 md:py-6 text-2xl font-bold text-gray-700 transition-all ${
+                  showCorrectAnswer 
+                    ? 'opacity-50 cursor-not-allowed' 
+                    : 'hover:bg-gray-50 active:bg-gray-100 active:scale-95'
+                }`}
               >
                 {num}
               </button>
@@ -221,14 +476,24 @@ export default function GameView({
             
             <button
               onClick={() => handleNumberClick(0)}
-              className="bg-white border border-gray-100 shadow-sm rounded-2xl py-4 md:py-6 text-2xl font-bold text-gray-700 hover:bg-gray-50 active:bg-gray-100 active:scale-95 transition-all"
+              disabled={showCorrectAnswer}
+              className={`bg-white border border-gray-100 shadow-sm rounded-2xl py-4 md:py-6 text-2xl font-bold text-gray-700 transition-all ${
+                showCorrectAnswer 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:bg-gray-50 active:bg-gray-100 active:scale-95'
+              }`}
             >
               0
             </button>
 
             <button
               onClick={handleBackspace}
-              className="flex items-center justify-center bg-white border border-gray-100 shadow-sm rounded-2xl py-4 md:py-6 text-gray-700 hover:bg-red-50 hover:text-red-500 active:scale-95 transition-all group"
+              disabled={showCorrectAnswer}
+              className={`flex items-center justify-center bg-white border border-gray-100 shadow-sm rounded-2xl py-4 md:py-6 text-gray-700 transition-all group ${
+                showCorrectAnswer 
+                  ? 'opacity-50 cursor-not-allowed' 
+                  : 'hover:bg-red-50 hover:text-red-500 active:scale-95'
+              }`}
             >
               <Delete size={28} className="group-hover:stroke-red-500" />
             </button>
@@ -236,8 +501,12 @@ export default function GameView({
 
           <button
             onClick={handleConfirm}
-            disabled={currentAnswer.length === 0}
-            className="w-full bg-purple-600 text-white font-bold py-5 rounded-xl shadow-lg hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all text-lg"
+            disabled={currentAnswer.length === 0 || showCorrectAnswer}
+            className={`w-full font-bold py-5 rounded-xl shadow-lg transition-all text-lg ${
+              currentAnswer.length === 0 || showCorrectAnswer
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                : 'bg-purple-600 text-white hover:bg-purple-700'
+            }`}
           >
             Confirmar
           </button>
