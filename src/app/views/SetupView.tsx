@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Plus, Minus, X, Divide, Shuffle, Brain, Calculator } from 'lucide-react';
+import { Plus, Minus, X, Divide, Shuffle, Brain, Calculator, Radical } from 'lucide-react';
 
 interface SetupScreenProps {
   selectedOp: string | null;
@@ -28,6 +28,7 @@ export default function SetupScreen({
     { id: 'sub', symbol: <Minus size={32} />, label: 'Subtração', color: 'bg-green-500', ring: 'ring-green-300' },
     { id: 'mult', symbol: <X size={32} />, label: 'Multiplicação', color: 'bg-orange-500', ring: 'ring-orange-300' },
     { id: 'div', symbol: <Divide size={32} />, label: 'Divisão', color: 'bg-red-500', ring: 'ring-red-300' },
+    { id: 'source', symbol: <Radical size={32} />, label: 'Raiz Quadrada', color: 'bg-purple-500', ring: 'ring-purple-300' },
   ];
 
   const numbers = [7, 8, 9, 4, 5, 6, 1, 2, 3];

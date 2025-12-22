@@ -6,7 +6,7 @@ import StreakIndicator from '../components/StreakIndicator';
 
 interface GameViewProps {
   totalTimeInSeconds: number;
-  operation: 'add' | 'sub' | 'mult' | 'div' | 'equation';
+  operation: 'add' | 'sub' | 'mult' | 'div' | 'equation' | 'sqrt';
   tableNumber: number | 'mix' | 'equation';
   gameMode?: 'normal' | 'equations';
   onTimeUp: (finalScore: number) => void; 
@@ -151,13 +151,11 @@ export default function GameView({
   const generateQuestion = useCallback((): Question => {
     // Modo de equações
     if (isEquationMode) {
-      // Gera equações do tipo: ax + b = c, onde x é a resposta
-      const a = randomInt(2, 10); // coeficiente de x
-      const x = randomInt(1, 20); // valor de x (resposta)
-      const b = randomInt(-20, 20); // termo independente do lado esquerdo
-      const c = a * x + b; // resultado do lado direito
+      const a = randomInt(2, 10);
+      const x = randomInt(1, 20);
+      const b = randomInt(-20, 20);
+      const c = a * x + b;
       
-      // Formata a equação
       const bSign = b >= 0 ? '+' : '-';
       const bAbs = Math.abs(b);
       const questionText = `${a}x ${bSign} ${bAbs} = ${c}`;
@@ -175,10 +173,8 @@ export default function GameView({
       table = tableNumber;
     }
     
-    if (table === 0) {
-      if (op === 'div') { 
-        op = 'mult'; 
-      }
+    if (table === 0 && op === 'div') { 
+      op = 'mult'; 
     }
 
     let num1: number, num2: number, questionText: string, answer: number;
@@ -216,6 +212,17 @@ export default function GameView({
           answer = result;
         }
         break;
+      
+      // NOVA PARTE: Lógica da Raiz Quadrada
+      case 'sqrt':
+        // Sorteamos a resposta primeiro (entre 1 e 12) para garantir raiz exata
+        // Se table for 0, usamos um range maior. Se não, usamos table como base de dificuldade
+        const maxRoot = table === 0 ? 10 : Math.max(Number(table) + 5, 10);
+        answer = randomInt(1, maxRoot); 
+        const square = answer * answer; // O número que vai dentro da raiz
+        questionText = `√${square} =`;
+        break;
+
       default: 
         num1 = 1; num2 = 1; questionText = "1 + 1 ="; answer = 2;
         break;
