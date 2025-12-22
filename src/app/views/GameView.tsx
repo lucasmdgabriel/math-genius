@@ -229,7 +229,7 @@ export default function GameView({
     }
     return { text: questionText, answer };
   }, [operation, tableNumber, isEquationMode]);
-
+  
   useEffect(() => {
     // Para modo de equações, termina após 5 questões
     if (isEquationMode && questionsAnswered >= 5) {

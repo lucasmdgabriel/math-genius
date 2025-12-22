@@ -28,10 +28,21 @@ export default function SetupScreen({
     { id: 'sub', symbol: <Minus size={32} />, label: 'Subtração', color: 'bg-green-500', ring: 'ring-green-300' },
     { id: 'mult', symbol: <X size={32} />, label: 'Multiplicação', color: 'bg-orange-500', ring: 'ring-orange-300' },
     { id: 'div', symbol: <Divide size={32} />, label: 'Divisão', color: 'bg-red-500', ring: 'ring-red-300' },
-    { id: 'source', symbol: <Radical size={32} />, label: 'Raiz Quadrada', color: 'bg-purple-500', ring: 'ring-purple-300' },
+    { id: 'sqrt', symbol: <Radical size={32} />, label: 'Raiz Quadrada', color: 'bg-purple-500', ring: 'ring-purple-300' },
   ];
 
   const numbers = [7, 8, 9, 4, 5, 6, 1, 2, 3];
+
+  // Função para lidar com a troca de operação
+  const handleOpSelect = (opId: string) => {
+    setSelectedOp(opId);
+    // Se for raiz quadrada, força o modo "mix" pois não faz sentido tabuada individual
+    if (opId === 'sqrt') {
+      setSelectedNum('mix');
+    } else if (selectedNum === 'mix' && opId !== 'sqrt') {
+      // Opcional: mantém o mix ou reseta se preferir
+    }
+  };
 
   return (
     <div className="min-h-screen bg-linear-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center p-4 font-sans">
@@ -108,7 +119,7 @@ export default function SetupScreen({
                     return (
                       <button
                         key={op.id}
-                        onClick={() => setSelectedOp(op.id)}
+                        onClick={() => handleOpSelect(op.id)}
                         className={`
                           ${op.color} text-white p-6 rounded-2xl 
                           flex flex-col items-center justify-center gap-2 
@@ -125,23 +136,27 @@ export default function SetupScreen({
                 </div>
               </div>
 
-              {/* Tabuadas */}
+              {/* Tabuadas / Seleção de Número */}
               <div>
-                <h2 className="text-center md:text-left text-gray-900 font-bold mb-6 text-lg">
-                  2. Escolha a Tabuada
+                <h2 className={`text-center md:text-left font-bold mb-6 text-lg transition-colors ${selectedOp === 'sqrt' ? 'text-purple-600' : 'text-gray-900'}`}>
+                  2. {selectedOp === 'sqrt' ? 'Modo Aleatório Ativado' : 'Escolha a Tabuada'}
                 </h2>
                 <div className="grid grid-cols-3 gap-3">
                   {numbers.map((num) => {
                     const isSelected = selectedNum === num;
+                    const isDisabled = selectedOp === 'sqrt'; // Desabilita botões individuais para raiz
                     return (
                       <button
                         key={num}
+                        disabled={isDisabled}
                         onClick={() => setSelectedNum(num)}
                         className={`
                           font-bold text-xl py-5 rounded-xl transition-all duration-200
                           ${isSelected 
                             ? 'bg-purple-600 text-white shadow-md scale-105' 
-                            : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}
+                            : isDisabled
+                              ? 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-50'
+                              : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}
                         `}
                       >
                         {num}
@@ -150,12 +165,15 @@ export default function SetupScreen({
                   })}
                   
                   <button
+                    disabled={selectedOp === 'sqrt'}
                     onClick={() => setSelectedNum(0)}
                     className={`
                       font-bold text-xl py-5 rounded-xl transition-all duration-200
                       ${selectedNum === 0 
                         ? 'bg-purple-600 text-white shadow-md scale-105' 
-                        : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}
+                        : selectedOp === 'sqrt'
+                          ? 'bg-gray-100 text-gray-300 cursor-not-allowed opacity-50'
+                          : 'bg-purple-100 text-purple-600 hover:bg-purple-200'}
                     `}
                   >
                     0
@@ -174,6 +192,11 @@ export default function SetupScreen({
                     <span className="text-sm font-medium">Mix</span>
                   </button>
                 </div>
+                {selectedOp === 'sqrt' && (
+                  <p className="mt-4 text-sm text-purple-600 bg-purple-50 p-3 rounded-lg border border-purple-100 animate-pulse">
+                    ✨ Na raiz quadrada, usaremos números aleatórios para testar você!
+                  </p>
+                )}
               </div>
             </div>
           ) : (
