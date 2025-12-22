@@ -72,7 +72,7 @@ export default function Home() {
   if (gameState === "playing") {
     return (
       <GameView
-        totalTimeInSeconds={gameMode === "equations" ? 60 : 15}
+        totalTimeInSeconds={gameMode === "equations" ? 60 : 30}
         operation={selectedOp as 'add' | 'sub' | 'mult' | 'div' | 'equation'}
         tableNumber={selectedNum as number | 'mix'}
         gameMode={gameMode}
