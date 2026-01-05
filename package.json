@@ -2,6 +2,7 @@
   "name": "math-genius",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@9.15.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,10 +11,9 @@
   },
   "dependencies": {
     "lucide-react": "^0.553.0",
-    "next": "^16.1.0",
-    "pnpm": "^10.27.0",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "next": "16.1.0",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -21,7 +21,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.0.3",
+    "eslint-config-next": "16.1.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
