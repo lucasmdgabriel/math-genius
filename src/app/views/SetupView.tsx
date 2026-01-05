@@ -79,8 +79,8 @@ export default function SetupScreen({
             >
               <Brain size={32} />
               <div className="text-center">
-                <div className="font-bold text-lg">Treino Rápido</div>
-                <div className="text-sm opacity-90">30 segundos de desafio</div>
+                <div className="font-bold text-lg">Desafios Simples</div>
+                <div className="text-sm opacity-90">45 segundos de desafio</div>
               </div>
             </button>
 
