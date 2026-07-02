@@ -1,5 +1,7 @@
 'use client';
 
+import { Home, RotateCcw } from 'lucide-react';
+
 interface ResultsViewProps {
   score: number;
   highScore: number;
@@ -15,45 +17,49 @@ export default function ResultsView({
 }: ResultsViewProps) {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 flex flex-col items-center">
-        
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">
-          Resultados do Desafio!
-        </h1>
-
-        <div className="bg-purple-100 rounded-2xl p-8 w-full flex flex-col items-center mb-4 shadow-inner">
-          <span className="text-7xl font-bold text-purple-600">
-            {score}
-          </span>
-          <span className="text-xl text-gray-700 mt-1">
-            Acertos
-          </span>
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
+            Resultados
+          </h1>
+          <p className="text-gray-500 mt-1 text-sm">
+            Seu desempenho no desafio
+          </p>
         </div>
 
-        <p className="text-lg text-gray-600 mb-6">
-          Seu recorde é: <span className="font-bold text-purple-600">{highScore}</span>
-        </p>
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <div className="flex flex-col items-center mb-6">
+            <div className="text-6xl font-black text-transparent bg-linear-to-br from-violet-600 to-indigo-600 bg-clip-text">
+              {score}
+            </div>
+            <span className="text-gray-500 text-sm font-medium mt-1">
+              acertos
+            </span>
+          </div>
 
-        <p className="text-center text-gray-600 mb-8 px-4">
-          Parabéns pelo seu esforço! Você está indo muito bem!
-        </p>
+          <div className="bg-gray-50 rounded-xl px-4 py-3 flex items-center justify-between mb-6">
+            <span className="text-gray-500 text-sm">Recorde</span>
+            <span className="text-gray-900 font-bold text-lg">{highScore}</span>
+          </div>
 
-        <div className="w-full flex flex-col gap-3">
-          <button
-            onClick={onPlayAgain}
-            className="w-full bg-purple-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-purple-700 active:scale-95 transition-all text-lg"
-          >
-            Jogar Novamente
-          </button>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={onPlayAgain}
+              className="w-full bg-linear-to-r from-violet-600 to-indigo-600 text-white font-bold py-4 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all text-base flex items-center justify-center gap-2"
+            >
+              <RotateCcw size={18} />
+              Jogar Novamente
+            </button>
 
-          <button
-            onClick={onGoHome}
-            className="w-full bg-purple-100 text-purple-600 font-bold py-4 rounded-xl hover:bg-purple-200 active:scale-95 transition-all text-lg"
-          >
-            Voltar ao Início
-          </button>
+            <button
+              onClick={onGoHome}
+              className="w-full bg-gray-100 text-gray-700 font-bold py-4 rounded-xl hover:bg-gray-200 active:scale-[0.98] transition-all text-base flex items-center justify-center gap-2"
+            >
+              <Home size={18} />
+              Voltar ao Início
+            </button>
+          </div>
         </div>
-
       </div>
     </div>
   );

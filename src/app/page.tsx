@@ -46,13 +46,16 @@ export default function Home() {
     setGameState("finished");
   };
 
-  const handleResetGame = () => {
-    setGameState("setup");
-    setSelectedOp(null);
-    setSelectedNum(null);
-    setGameMode("normal");
+  const handlePlayAgain = () => {
     setFinalScore(0);
     setHighScore(0);
+    setGameState("playing");
+  };
+
+  const handleGoHome = () => {
+    setFinalScore(0);
+    setHighScore(0);
+    setGameState("setup");
   };
 
   if (gameState === "setup") {
@@ -86,8 +89,8 @@ export default function Home() {
       <ResultsView 
         score={finalScore}
         highScore={highScore}
-        onPlayAgain={handleResetGame} 
-        onGoHome={handleResetGame}    
+        onPlayAgain={handlePlayAgain} 
+        onGoHome={handleGoHome}    
       />
     );
   }
